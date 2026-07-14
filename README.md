@@ -15,7 +15,7 @@ A smart lighting system built using **Arduino UNO** and a **TTP223 Touch Sensor*
 | Item | Details |
 |------|---------|
 | **Course Title** | Microprocessor and Interfacing Lab |
-| **Course ID** | CSE 0714 |
+| **Course ID** | CSE 0714 3178 |
 | **Credits** | 1.5 |
 | **Semester** | 3rd Year, 1st Semester |
 
