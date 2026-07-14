@@ -1,12 +1,16 @@
-# 💡 Smart Touch-Controlled Light with Energy Monitoring
+# 💡 Project Title: *Smart Touch-Controlled Light with Energy Monitoring*
 
-A smart lighting system built using **Arduino UNO** and a **TTP223 Touch Sensor**. The project provides touch-based light control, automatic energy saving, usage monitoring, energy consumption estimation, and smart analytics through the Serial Monitor.
+<p align="center">
 
----
+![Arduino](https://img.shields.io/badge/Arduino-UNO-blue?logo=arduino)
+![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
+![Platform](https://img.shields.io/badge/Platform-Arduino_IDE-success)
+![Simulation](https://img.shields.io/badge/Wokwi-Supported-orange)
+![License](https://img.shields.io/badge/License-Academic-lightgrey)
 
-# 📌 Project Title
+</p>
 
-## ***Smart Touch-Controlled Light with Energy Monitoring***
+A smart lighting system built using **Arduino UNO** and a **Touch Sensor (TTP223)**. The project provides touch-based light control, automatic energy saving, usage monitoring, energy consumption estimation, and smart analytics through the Serial Monitor.
 
 ---
 
@@ -14,22 +18,22 @@ A smart lighting system built using **Arduino UNO** and a **TTP223 Touch Sensor*
 
 | Item | Details |
 |------|---------|
-| **Course Title** | Microprocessor and Interfacing Lab |
-| **Course ID** | CSE 0714 3178 |
-| **Credits** | 1.5 |
-| **Semester** | 3rd Year, 1st Semester |
+| Course Title | Microprocessor and Interfacing Lab |
+| Course ID | CSE 0714 3178 |
+| Credits | 1.5 |
+| Semester | 3rd Year, 1st Semester |
 
 ---
 
 # 📖 Project Introduction
 
-The main goal of this project is to build a smart light control system using a **Touch Sensor** and **Arduino UNO**.
+The main goal of this project is to build a smart light control system using an Arduino UNO and a touch sensor.
 
-A user can turn the light **ON** or **OFF** by simply touching the touch sensor.
+A user can turn the LED ON or OFF by simply touching the sensor.
 
-Unlike a normal touch-controlled light, this project also saves energy by automatically turning the light **OFF** after a period of inactivity. It also records different usage statistics such as touch count, total ON time, estimated energy consumption, and electricity cost.
+Unlike a normal touch-controlled light, this project automatically turns the light OFF after inactivity, warns the user before shutdown, tracks usage statistics, estimates energy consumption, and calculates electricity cost.
 
-This project demonstrates how a simple lighting system can be made smarter using software without adding extra hardware.
+This project demonstrates how software can make a simple lighting system smarter without requiring additional hardware.
 
 ---
 
@@ -49,6 +53,75 @@ This project demonstrates how a simple lighting system can be made smarter using
 
 - Arduino IDE
 - C++
+- Wokwi Simulator
+
+---
+
+# 📂 Repository Structure
+
+```text
+.
+├── README.md
+├── SmartTouchLight.ino
+├── sketch.ino
+├── diagram.json
+├── circuit_wokwi.png
+└── wokwi-project.txt
+```
+
+---
+
+# ▶️ How to Run
+
+## Arduino IDE
+
+1. Open `SmartTouchLight.ino`
+2. Select Arduino UNO
+3. Upload the code
+4. Open Serial Monitor
+5. Baud Rate = **9600**
+
+---
+
+## Wokwi
+
+1. Open the Wokwi project link.
+2. Click ▶ Start Simulation.
+3. Press the touch button.
+4. Observe the LED behavior.
+5. Open the Serial Monitor to view analytics.
+
+---
+
+# 🔌 Circuit Connections
+
+| Component | Arduino Pin |
+|------------|-------------|
+| Touch Sensor OUT | D7 |
+| LED (+) | D13 |
+| LED (-) | GND (through 220Ω resistor) |
+| Touch Sensor VCC | 5V |
+| Touch Sensor GND | GND |
+
+---
+
+# 📸 Project Preview
+
+## Wokwi Circuit
+
+<p align="center">
+<img src="circuit_wokwi.png" width="700">
+</p>
+
+---
+
+# 🔗 Wokwi Simulation
+
+You can run the complete project online without any hardware.
+
+**Simulation Link**
+
+https://wokwi.com/projects/469553316004649985
 
 ---
 
@@ -424,16 +497,17 @@ The system can:
 
 The **Smart Touch-Controlled Light with Energy Monitoring** is a simple, practical, and energy-efficient embedded systems project.
 
-It demonstrates:
+Although the hardware is simple, software makes the system intelligent by adding automation, monitoring, and analytics.
 
-- Digital Input and Output
-- Timer-Based Programming
+The project demonstrates
+
+- Digital Input/Output
+- Timer Programming
+- State Machine Design
 - Energy Saving
 - Usage Monitoring
 - Data Analysis
-- User Interaction through the Serial Monitor
-
-Although the hardware is simple, the software makes the system intelligent, interactive, and practical for real-world applications.
+- Serial Communication
 
 ---
 
@@ -450,8 +524,6 @@ Although the hardware is simple, the software makes the system intelligent, inte
 
 ---
 
-## 📜 License
+# 📜 License
 
-This project was developed as part of the **Microprocessor and Interfacing Lab (CSE 0714)** course for academic and educational purposes.
-
----
+This project was developed for the **Microprocessor and Interfacing Lab (CSE 0714)** course for academic and educational purposes.
