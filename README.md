@@ -57,6 +57,50 @@ This project demonstrates how software can make a simple lighting system smarter
 
 ---
 
+# 🔄 System Workflow
+
+```text
+Power ON
+    │
+    ▼
+Arduino Starts
+    │
+    ▼
+Wait for Touch
+    │
+    ▼
+Touch Detected
+    │
+    ▼
+LED ON
+    │
+    ▼
+30 Second Timer Starts
+    │
+    ▼
+25 Seconds
+    │
+    ▼
+Warning Countdown
+5
+4
+3
+2
+1
+    │
+ ┌──┴───────────┐
+ │              │
+ ▼              ▼
+Touch Again    No Touch
+ │              │
+ ▼              ▼
+Reset Timer    Sleep Mode
+ │              │
+ └──────────► LED OFF
+```
+
+---
+
 # 📂 Repository Structure
 
 ```text
@@ -362,50 +406,6 @@ Average Session Time : 2m 24s
 Statistics Reset Automatically.
 
 New Monitoring Session Started.
-```
-
----
-
-# 🔄 System Workflow
-
-```text
-Power ON
-    │
-    ▼
-Arduino Starts
-    │
-    ▼
-Wait for Touch
-    │
-    ▼
-Touch Detected
-    │
-    ▼
-LED ON
-    │
-    ▼
-30 Second Timer Starts
-    │
-    ▼
-25 Seconds
-    │
-    ▼
-Warning Countdown
-5
-4
-3
-2
-1
-    │
- ┌──┴───────────┐
- │              │
- ▼              ▼
-Touch Again    No Touch
- │              │
- ▼              ▼
-Reset Timer    Sleep Mode
- │              │
- └──────────► LED OFF
 ```
 
 ---
