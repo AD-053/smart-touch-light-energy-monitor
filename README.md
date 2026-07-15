@@ -1,269 +1,488 @@
-// Pin Configurations
-const int touchPin = 7;
-const int ledPin = 13;
 
-// State Variables
-bool ledState = false;
-bool lastTouchState = LOW;
-bool warningMode = false;
-bool blinkState = true;
-int countdown = 5;
+---
 
-// Timers (Using unsigned long to prevent overflow bugs)
-unsigned long startTime = 0;
-unsigned long lastBlinkTime = 0;
-unsigned long lastCountTime = 0;
-unsigned long twentyFourHourTimer = 0;
+# 💡 Project Title: *Smart Touch & Vision Controlled Light with Energy Monitoring*
 
-// Analytics Counters
-unsigned int touchCount = 0;
-unsigned int autoOffCount = 0;
-unsigned int sessionCount = 0;
-unsigned long totalOnTimeMs = 0; // Cumulative time across completed sessions
+A smart hybrid lighting system built using **Arduino UNO**, a physical **Touch Sensor (TTP223)**, and a **Computer Vision Controller**. The project provides seamless dual-control (physical touch and contactless hand gestures), automatic energy saving, continuous usage monitoring, energy consumption estimation, and real-time smart analytics through the Serial Monitor interface.
 
-// Energy Calculation Constants
-const double LED_POWER_WATTS = 0.04;    // 0.04 Watts (given in documentation)
-const double COST_PER_WH = 0.012;       // 12 Tk per kWh = 0.012 Tk per Wh
+---
 
-// Serial Input Buffer
-String inputBuffer = "";
+# 🎓 Course Information
 
-void setup() {
-  pinMode(touchPin, INPUT);
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+| Item | Details |
+| --- | --- |
+| Course Title | Microprocessor and Interfacing Lab |
+| Course ID | CSE 0714 3178 |
+| Credits | 1.5 |
+| Semester | 3rd Year, 1st Semester |
 
-  Serial.begin(9600);
-  twentyFourHourTimer = millis(); // Initialize the 24-hour baseline
+---
 
-  Serial.println("========================================");
-  Serial.println("  Smart Touch Light System Initialized  ");
-  Serial.println("========================================");
-}
+# 👨‍💻 Team Information
 
-void loop() {
-  // 1. Handle Automatic 24-Hour Report
-  // 86400000 milliseconds = 24 hours
-  if (millis() - twentyFourHourTimer >= 86400000UL) {
-    printReport("24-Hour Monitoring Completed");
-    resetStatistics();
-    Serial.println("24-Hour Session Completed.");
-    Serial.println("Statistics Reset Automatically.");
-    Serial.println("New Monitoring Session Started.");
-  }
+**Team Name:** `Group_05_Section_A`
 
-  // 2. Handle Serial Commands ("report", "reset", and Python Vision Input)
-  while (Serial.available() > 0) {
-    char c = Serial.read();
-    if (c == '\n' || c == '\r') {
-      inputBuffer.trim();
-      if (inputBuffer.equalsIgnoreCase("report")) {
-        printReport("Current Monitoring Session");
-      } 
-      else if (inputBuffer.equalsIgnoreCase("reset")) {
-        printReport("Monitoring Session Ended");
-        Serial.println("Manual Reset Requested...");
-        resetStatistics();
-        Serial.println("Statistics Cleared Successfully.");
-        Serial.println("New Monitoring Session Started.");
-      }
-      // NEW: Vision Control - Turn ON / Reset Warning Countdown (All fingers open)
-      else if (inputBuffer.equalsIgnoreCase("VISION_ON")) {
-        if (!ledState) {
-          ledState = true;
-          digitalWrite(ledPin, HIGH);
-          startTime = millis();
-          sessionCount++; // Increment session count for average time tracking
-          warningMode = false;
-          countdown = 5;
-          blinkState = true;
-          Serial.println("Vision Alert: Light turned ON");
-        } else if (warningMode) {
-          // If in warning mode, hand gesture cancels warning and extends the timer
-          warningMode = false;
-          countdown = 5;
-          digitalWrite(ledPin, HIGH);
-          startTime = millis();
-          Serial.println("Vision Alert: Warning Cancelled");
-        }
-      }
-      // NEW: Vision Control - Turn OFF (All fingers closed / Fist)
-      else if (inputBuffer.equalsIgnoreCase("VISION_OFF")) {
-        if (ledState) {
-          ledState = false;
-          digitalWrite(ledPin, LOW);
-          totalOnTimeMs += (millis() - startTime); // Save session duration
-          Serial.println("Vision Alert: Light turned OFF");
-        }
-      }
-      inputBuffer = ""; // Clear buffer after evaluation
-    } else {
-      inputBuffer += c;
-    }
-  }
+| Name | Registration No. | Project Contribution |
+| --- | --- | --- |
+| **Md Shajjadul Ferdous** | 2022331015 | Wrote the math formulas for **Energy Consumption ($Wh$)** and calculated the **Electricity Cost** in Tk. |
+| **Autanu Datta** | 2022331053 | Created the **Time Tracking Logic** and the **Analytics Engine**, including the 24-hour automatic report and `report`/`reset` commands. |
+| **Taposh Kumer Ghosh** | 2022331089 | Built the Python script, added the **MediaPipe/OpenCV Hand Gesture Control** (`VISION_ON`/`VISION_OFF`), and fixed connection bugs. |
+| **Rahad Islam** | 2022331097 | Designed the circuit layout, set up the **TTP223 Touch Sensor** with debouncing, and built the physical **Mini House Prototype**. |
 
-  // 3. Handle Touch Sensor Inputs
-  bool touchState = digitalRead(touchPin);
+---
 
-  if (touchState == HIGH && lastTouchState == LOW) {
-    touchCount++;
-    Serial.println();
-    Serial.print("Touch Count : ");
-    Serial.println(touchCount);
+# 📖 Project Introduction
 
-    if (!ledState) {
-      // Feature 1: LED turns ON
-      ledState = true;
-      digitalWrite(ledPin, HIGH);
-      startTime = millis();
-      sessionCount++; // Increment session count for average time tracking
+The main goal of this project is to build a hybrid, intelligent light control system using an Arduino UNO, a touch sensor, and an integrated computer vision processor.
 
-      warningMode = false;
-      countdown = 5;
-      blinkState = true;
+A user can turn the LED ON or OFF either by physically touching the touch sensor or by showing simple hand gestures (open hand or fist) to a connected webcam.
 
-      Serial.println("Light ON");
-      Serial.println("Timer Started (30 sec)");
-    } 
-    else {
-      if (warningMode) {
-        // Feature 4: Touch during warning mode cancels countdown
-        warningMode = false;
-        countdown = 5;
-        digitalWrite(ledPin, HIGH);
-        startTime = millis();
+Unlike a standard automated light, this project intelligently saves electricity by turning the light OFF after a period of inactivity, warning the user before doing so, tracking complete session statistics, estimating power usage in Watt-hours, and dynamically calculating live monetary cost projections.
 
-        Serial.println("Touch Detected");
-        Serial.println("Countdown Cancelled");
-        Serial.println("Timer Reset (30 sec)");
-        Serial.println("Light Remains ON");
-      } 
-      else {
-        // Feature 1: Touch again while ON turns it OFF
-        ledState = false;
-        digitalWrite(ledPin, LOW);
-        totalOnTimeMs += (millis() - startTime); // Save session duration
-        Serial.println("Light OFF");
-      }
-    }
-    delay(200); // Hardware debouncing
-  }
-  lastTouchState = touchState;
+---
 
-  // 4. Feature 3: Enter Warning Mode after 25 seconds of continuous run time
-  if (ledState && !warningMode && (millis() - startTime >= 25000)) {
-    warningMode = true;
-    countdown = 5;
-    lastBlinkTime = millis();
-    lastCountTime = millis();
+# 🛠 Hardware Used
 
-    Serial.println();
-    Serial.println("----------------------------");
-    Serial.println("WARNING!");
-    Serial.println("Auto OFF in 5 seconds...");
-    Serial.println(countdown);
-  }
+| Component | Description | Estimated Price |
+| --- | --- | --- |
+| **Arduino UNO R3** | Main microcontroller board running the core firmware loop | 760 Tk |
+| **TTP223 Touch Sensor** | Capacitive touch module providing physical interface control | 60 Tk |
+| **LED** | Light-emitting diode acting as the smart light source | 2 Tk |
+| **Breadboard** | Solderless prototyping board for circuit connections | 50 Tk |
+| **Jumper Wires** | Interconnecting wires (Male-to-Male / Female-to-Male) | 50 Tk |
+| **Mini House Setup** | Structural housing/enclosure built for the smart light prototype | 100 Tk |
+| **Host PC / Laptop + Webcam** | Core system powering the OpenCV/MediaPipe tracking layer | *Existing Device* |
+| **Total Hardware Cost** | *(Excluding Host PC/Laptop)* | **1022 Tk** |
 
-  // 5. Warning Mode Active Control Loop
-  if (warningMode) {
-    // Feature 4: Slow blinking active during last 5 seconds (every 250ms toggle)
-    if (millis() - lastBlinkTime >= 250) {
-      blinkState = !blinkState;
-      digitalWrite(ledPin, blinkState);
-      lastBlinkTime = millis();
-    }
+(Note: The prices are estimated standard local market rates in Bangladeshi Taka (Tk) to match the currency context of your code's billing module).
+---
 
-    // Feature 3: Live numeric countdown tracking
-    if (millis() - lastCountTime >= 1000) {
-      countdown--;
-      if (countdown > 0) {
-        Serial.println(countdown);
-      }
-      lastCountTime = millis();
-    }
+# 💻 Software Used
 
-    // Feature 2 & 9: Countdown hits 0 -> Auto OFF activates
-    if (countdown <= 0) {
-      ledState = false;
-      warningMode = false;
-      digitalWrite(ledPin, LOW);
-      
-      autoOffCount++;
-      totalOnTimeMs += (millis() - startTime); // Capture full 30-second runtime
+* Arduino IDE
+* C++ (Arduino Firmware)
+* Python 3.x (Vision Framework Engine)
+* OpenCV & MediaPipe (Hand Tracking Libraries)
+* Wokwi Simulator
 
-      Serial.println();
-      Serial.println("Sleep Mode Activated");
-      Serial.println("Light OFF");
-    }
-  }
-}
+---
 
-// Helper Function: Generates and prints analytics report format
-void printReport(String sessionStatus) {
-  // If the light is active right now, compute current elapsed time on the fly
-  unsigned long dynamicSessionTime = ledState ? (millis() - startTime) : 0;
-  unsigned long aggregateTimeSeconds = (totalOnTimeMs + dynamicSessionTime) / 1000;
+# 🔄 System Workflow
 
-  // Features 7 & 8: Math Formulas
-  double energyUsedWh = LED_POWER_WATTS * ((double)aggregateTimeSeconds / 3600.0);
-  double estimatedCostTk = energyUsedWh * COST_PER_WH;
+```text
+       Power ON
+          │
+          ▼
+    Arduino Starts
+          │
+          ▼
+ Wait for Touch / Gesture
+          │
+    ┌─────┴─────────────────────┐
+    ▼                           ▼
+Touch Detected OR Gesture (All Fingers Open)
+    │                           │
+    └─────────────┬─────────────┘
+                  ▼
+               LED ON
+                  │
+                  ▼
+        30 Second Timer Starts
+                  │
+                  ▼
+              25 Seconds
+                  │
+                  ▼
+          Warning Countdown
+             5, 4, 3, 2, 1
+                  │
+       ┌──────────┴──────────┐
+       │                     │
+       ▼                     ▼
+ Touch / Gesture Open    No Interaction
+       │                     │
+       ▼                     ▼
+   Reset Timer           Sleep Mode
+       │                     │
+       └──────────────►  LED OFF
 
-  unsigned long averageSessionSeconds = 0;
-  if (sessionCount > 0) {
-    averageSessionSeconds = aggregateTimeSeconds / sessionCount;
-  }
+```
 
-  Serial.println("========================================");
-  Serial.println("SMART LIGHT ANALYTICS");
-  Serial.println("========================================");
-  Serial.println();
-  Serial.println(sessionStatus);
-  Serial.println();
-  Serial.print("Touch Count          : "); Serial.println(touchCount);
-  Serial.print("Total ON Time        : "); formatTimeDisplay(aggregateTimeSeconds, false); Serial.println();
-  Serial.print("Energy Used          : "); Serial.print(energyUsedWh, 3); Serial.println(" Wh");
-  Serial.print("Estimated Cost       : "); Serial.print(estimatedCostTk, 5); Serial.println(" Tk");
-  Serial.print("Auto OFF Events      : "); Serial.println(autoOffCount);
-  Serial.print("Average Session Time : "); formatTimeDisplay(averageSessionSeconds, true); Serial.println();
-  Serial.println();
-  Serial.println("========================================");
-}
+---
 
-// Helper Function: Resets all monitoring variables to 0
-void resetStatistics() {
-  touchCount = 0;
-  autoOffCount = 0;
-  totalOnTimeMs = 0;
-  
-  if (ledState) {
-    startTime = millis(); // Continuous baseline shift if light stays running
-    sessionCount = 1;
-  } else {
-    sessionCount = 0;
-  }
-  twentyFourHourTimer = millis(); 
-}
+# 📂 Repository Structure
 
-// Helper Function: Formats raw seconds cleanly matching the documentation style
-void formatTimeDisplay(unsigned long totalSeconds, bool isAverageField) {
-  unsigned long hours = totalSeconds / 3600;
-  unsigned long minutes = (totalSeconds % 3600) / 60;
-  unsigned long seconds = totalSeconds % 60;
+```text
+.
+├── README.md
+├── SmartTouchLight.ino      # Main Arduino firmware supporting Touch & Serial Vision overrides
+├── vision_controller.py     # Python OpenCV/MediaPipe tracking script
+├── sketch.ino               # Wokwi simulation source
+├── diagram.json             # Wokwi board config
+├── circuit_wokwi.png        # Physical schematic visualizer
+└── wokwi-project.txt        # Simulator reference notes
 
-  if (hours > 0) {
-    Serial.print(hours); Serial.print("h ");
-    Serial.print(minutes); Serial.print("m ");
-    Serial.print(seconds); Serial.print("s");
-  } 
-  else if (minutes > 0) {
-    Serial.print(minutes); Serial.print("m ");
-    Serial.print(seconds); Serial.print("s");
-  } 
-  else {
-    if (isAverageField) {
-      Serial.print(seconds); Serial.print(" sec");
-    } else {
-      Serial.print(seconds); Serial.print("s");
-    }
-  }
-}
+```
+
+---
+
+# ▶️ How to Run
+
+## 1. Setting Up the Firmware (Arduino IDE)
+
+1. Connect your Arduino UNO to your PC using a USB cable.
+2. Open `SmartTouchLight.ino` inside the Arduino IDE.
+3. Select your core board type (**Arduino UNO**) and identify your active serial port (e.g., `/dev/cu.usbmodem1301` or `COM3`).
+4. Upload the code to your board.
+5. **Important:** Close the Arduino IDE Serial Monitor window so the port is free for the Vision Controller.
+
+## 2. Setting Up the Vision Engine (Python)
+
+1. Open your terminal or command prompt and install the structural core dependencies:
+```bash
+pip3 install opencv-python mediapipe==0.10.14 pyserial
+
+```
+
+
+2. Open `vision_controller.py` and ensure the `ARDUINO_PORT` variable matches your active port exactly.
+3. Run the vision tracking layer:
+```bash
+python3 vision_controller.py
+
+```
+
+
+4. A window showing your camera feed will appear. Hold up **5 open fingers** to turn the light ON, and close your hand into a **fist (0 fingers)** to turn it OFF.
+
+---
+
+# 🔌 Circuit Connections
+
+| Component | Arduino Pin | Description |
+| --- | --- | --- |
+| Touch Sensor OUT | D7 | Digital input pin reading human touch states |
+| LED (+) | D13 | Output driver pin (Arduino built-in status indicator) |
+| LED (-) | GND | Ground loop passing through a 220Ω protection resistor |
+| Touch Sensor VCC | 5V | Constant system power line |
+| Touch Sensor GND | GND | Shared system ground plane |
+
+---
+
+# 📸 Project Preview
+
+## Wokwi Circuit
+
+<p align="center">
+<img src="circuit_wokwi.png" width="700">
+</p>
+
+---
+
+# 🔗 Wokwi Simulation
+
+You can run the touch-controlled firmware portion of this project online without any hardware components.
+
+**Simulation Link**
+
+[https://wokwi.com/projects/469553316004649985](https://wokwi.com/projects/469553316004649985)
+
+---
+
+# ✨ Features
+
+## 1. Touch-Controlled Light
+
+* Touch once → LED turns **ON**
+* Touch again → LED turns **OFF**
+
+This replaces traditional electrical toggle switches with a responsive physical touch module.
+
+---
+
+## 2. Contactless Vision Control (New)
+
+* **All 5 Fingers Open** → Sends `VISION_ON` → LED turns **ON**
+* **All Fingers Closed (Fist)** → Sends `VISION_OFF` → LED turns **OFF**
+
+Integrates smart automation by processing camera data frames using Google MediaPipe and transmitting localized Serial overrides via USB execution loops.
+
+---
+
+## 3. Auto OFF (Energy Saving)
+
+When the LED turns ON (via Touch or Vision), an internal **30-second timer** begins counting down. If no subsequent touch or open-hand gesture is registered within 30 seconds, the LED switches OFF automatically.
+
+---
+
+## 4. Smart Reminder
+
+After **25 seconds** of run time, the system prints out alerts across the communication channel to indicate an impending automated shutdown:
+
+```text
+WARNING!
+Auto OFF in 5 seconds...
+5
+4
+3
+2
+1
+
+```
+
+---
+
+## 5. Sleep Mode
+
+During the last 5 seconds of the session window:
+
+* The LED blinks slowly as a visual cue.
+* Tapping the touch sensor or presenting **5 open fingers** to the camera halts the countdown, resets the base clock, and returns the LED to a solid ON state.
+* If left completely unattended, the light turns OFF.
+
+---
+
+## 6. Touch Counter
+
+Tracks physical interactions over the lifetime of a monitoring run.
+Example:
+
+```text
+Touch Count : 1
+Touch Count : 2
+Touch Count : 3
+
+```
+
+---
+
+## 7. Total ON Time
+
+Logs active run times to ensure precise telemetry records:
+Example:
+
+```text
+Current Session
+35 seconds
+-------------------
+Total ON Time
+7 minutes 35 seconds
+
+```
+
+---
+
+## 8. Energy Consumption
+
+Calculates dynamic electrical work consumption values.
+Formula:
+
+
+$$\text{Energy (Wh)} = \text{Power (Watts)} \times \left(\frac{\text{Time (Seconds)}}{3600}\right)$$
+
+
+Example output display:
+
+```text
+Energy Used
+0.005 Wh
+
+```
+
+---
+
+## 9. Estimated Electricity Cost
+
+Computes financial calculations based on raw power consumption metrics using the system cost variables.
+Example output display:
+
+```text
+Estimated Cost
+0.00006 Tk
+
+```
+
+---
+
+## 10. Auto OFF Counter
+
+Tracks total energy-saving interventions triggered by the device software.
+Example:
+
+```text
+Auto OFF Events
+8
+
+```
+
+---
+
+## 11. Smart Light Analytics
+
+An encapsulated analytics engine storing active run data profiles including total touch counts, overall run times, average session lengths, calculated power consumption, financial tracking costs, and automated safety events.
+
+---
+
+# 🖥 Serial Monitor Commands
+
+The internal firmware parses command phrases sent manually from the console or programmatically by your scripts:
+
+## `report`
+
+Displays an explicit snapshot breakdown of the monitoring run without resetting current tracking tables.
+Example:
+
+```text
+========================================
+SMART LIGHT ANALYTICS
+========================================
+
+Current Monitoring Session
+
+Touch Count          : 18
+Total ON Time        : 12m 25s
+Energy Used          : 0.008 Wh
+Estimated Cost       : 0.00010 Tk
+Auto OFF Events      : 6
+Average Session Time : 41 sec
+
+========================================
+
+```
+
+---
+
+## `reset`
+
+Pushes the analytics table out to the terminal log before executing a hard clear of internal variables to initialize a brand-new telemetry block.
+Example:
+
+```text
+========================================
+SMART LIGHT ANALYTICS
+========================================
+
+Monitoring Session Ended
+
+Touch Count          : 48
+Total ON Time        : 1h 12m 45s
+Energy Used          : 0.050 Wh
+Estimated Cost       : 0.00060 Tk
+Auto OFF Events      : 15
+Average Session Time : 1m 30s
+
+========================================
+
+Manual Reset Requested...
+
+Statistics Cleared Successfully.
+
+New Monitoring Session Started.
+
+```
+
+---
+
+## `VISION_ON` / `VISION_OFF`
+
+Automated inputs handled directly by the computer vision backend loop script to transition electrical states or reset sleep warnings via the USB serial bus.
+
+---
+
+# ⏰ Automatic 24-Hour Report
+
+After running continuously for **24 hours**, the system automatically compiles, displays, and flushes data states to keep analytics records safe from variable overflow constraints.
+
+```text
+========================================
+SMART LIGHT ANALYTICS
+========================================
+
+24-Hour Monitoring Completed
+
+Touch Count          : 87
+Total ON Time        : 3h 28m 15s
+Energy Used          : 0.144 Wh
+Estimated Cost       : 0.00173 Tk
+Auto OFF Events      : 27
+Average Session Time : 2m 24s
+
+========================================
+
+24-Hour Session Completed.
+
+Statistics Reset Automatically.
+
+New Monitoring Session Started.
+
+```
+
+---
+
+# 📊 Statistics Collected
+
+The system records:
+
+* Total Physical Touch Count
+* Total LED ON Time Accumulation
+* Calculated Average Session Time Length
+* Precise Energy Consumption Computation ($Wh$)
+* Local Unit Electricity Price Conversions ($Tk$)
+* Automated Safe Shutdown Event Totals
+
+---
+
+# ⚡ Energy Calculation
+
+Formula:
+
+
+$$\text{Energy} = \text{Power} \times \text{Time}$$
+
+* **LED Base Load Power:** `0.04 Watt`
+* **LED Continuous Run Time Example:** `2 Minutes`
+* **Resultant Energy Calculation:** `0.00133 Wh`
+* **Resultant Financial Projection:** `0.000016 Tk`
+
+---
+
+# 🎯 Applications
+
+* Smart Home Integration
+* Motion/Gesture Controlled Spaces (Hostel, Classroom, Offices)
+* Automated Energy Auditing Systems
+* Hands-Free Sanitary Control Interfaces
+* Embedded Systems & Real-Time Data Analysis Demonstrations
+
+---
+
+# 🌟 Project Innovation
+
+This project transitions from a basic hardware toggle to a smart **hybrid edge controller**.
+
+Key innovations include:
+
+* **Dual Layer Interaction:** Physical touch sensing and computer vision systems work concurrently.
+* **Embedded Telemetry:** Performs time-tracking, data reduction, and physics-based financial conversions directly on-chip.
+* **Proactive Interventions:** Provides automated reminders, slow blinking warning profiles, and gesture override extensions to prevent unexpected blackouts.
+* **Automated Lifecycle Processing:** Implements command-driven and interval-driven scheduling models for hands-free management.
+
+---
+
+# 📝 Conclusion
+
+The **Smart Touch & Vision Controlled Light with Energy Monitoring** application provides a functional, highly integrated framework showing how standard digital inputs can merge with desktop computer vision systems.
+
+Key architectural patterns showcased include:
+
+* Concurrent Digital I/O Handling
+* Asynchronous, Non-Blocking Serial Parsing
+* State Machine Processing Frameworks
+* Low-Overhead Floating Point Mathematical Evaluations
+* Computer Vision Feature Tracking Pipelines
+
+---
+
+# 📜 License
+
+This project was developed for the **Microprocessor and Interfacing Lab (CSE 0714)** course for academic and educational purposes.

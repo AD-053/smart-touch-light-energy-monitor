@@ -52,7 +52,7 @@ void loop() {
     Serial.println("New Monitoring Session Started.");
   }
 
-  // 2. Handle Serial Commands ("report" and "reset")
+  // 2. Handle Serial Commands ("report", "reset", and Python Vision Input)
   while (Serial.available() > 0) {
     char c = Serial.read();
     if (c == '\n' || c == '\r') {
@@ -66,6 +66,35 @@ void loop() {
         resetStatistics();
         Serial.println("Statistics Cleared Successfully.");
         Serial.println("New Monitoring Session Started.");
+      }
+      // NEW: Vision Control - Turn ON / Reset Warning Countdown (All fingers open)
+      else if (inputBuffer.equalsIgnoreCase("VISION_ON")) {
+        if (!ledState) {
+          ledState = true;
+          digitalWrite(ledPin, HIGH);
+          startTime = millis();
+          sessionCount++; // Increment session count for average time tracking
+          warningMode = false;
+          countdown = 5;
+          blinkState = true;
+          Serial.println("Vision Alert: Light turned ON");
+        } else if (warningMode) {
+          // If in warning mode, hand gesture cancels warning and extends the timer
+          warningMode = false;
+          countdown = 5;
+          digitalWrite(ledPin, HIGH);
+          startTime = millis();
+          Serial.println("Vision Alert: Warning Cancelled");
+        }
+      }
+      // NEW: Vision Control - Turn OFF (All fingers closed / Fist)
+      else if (inputBuffer.equalsIgnoreCase("VISION_OFF")) {
+        if (ledState) {
+          ledState = false;
+          digitalWrite(ledPin, LOW);
+          totalOnTimeMs += (millis() - startTime); // Save session duration
+          Serial.println("Vision Alert: Light turned OFF");
+        }
       }
       inputBuffer = ""; // Clear buffer after evaluation
     } else {
